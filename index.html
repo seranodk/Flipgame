@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#1d6b63">
+<meta name="description" content="Vendespil for de 4-8-årige. Find parrene blandt dyr, frugt, biler og syv andre slags billeder på 4×4, 5×5 eller 6×6 kort, alene eller to sammen.">
+<meta name="spil:navn" content="Vendespil">
+<meta name="spil:genre" content="Hukommelse">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vendespil">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box;height:100%}</style>
+<title>Vendespil</title>
+<title>Vendespil</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap">
+<style>
+/* Layout: et legebord af grøn filt — slank topbar, kortene skaleret til at fylde resten, menuer svæver over bordet. Ét fast look. */
+:root{
+  --felt:#1d6b63; --felt-hi:#2b8a7e; --felt-dk:#124a44;
+  --cream:#fff8ec; --cream-dk:#e6d6bb; --ink:#203634; --ink-soft:#5b6f6b;
+  --tomato:#ee5a3c; --tomato-dk:#b8402a; --sun:#ffc53d; --sun-dk:#d99a12;
+  --p1:#2f86d9; --p2:#9a57df;
+  --display:"Baloo 2","Arial Rounded MT Bold","Trebuchet MS",system-ui,sans-serif;
+  --ui:"Nunito","Segoe UI",system-ui,sans-serif;
+  --emoji:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;
+  color-scheme:light;
+}
+html,body{height:100%}
+[hidden]{display:none!important}
+body{margin:0;color:var(--cream);font-family:var(--ui);overflow:hidden;
+  background:radial-gradient(130% 90% at 50% 0%,var(--felt-hi),var(--felt) 55%,var(--felt-dk));background-color:var(--felt);
+  touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid var(--sun);outline-offset:3px}
+#app{height:100%;display:flex;flex-direction:column;gap:10px;box-sizing:border-box;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px}
+
+/* ---------- Topbar ---------- */
+.hud{display:flex;align-items:center;gap:10px;width:100%;max-width:620px;margin:0 auto}
+.round{flex:none;width:44px;height:44px;border-radius:50%;border:0;display:grid;place-items:center;
+  background:rgba(255,248,236,.14);box-shadow:inset 0 0 0 2px rgba(255,248,236,.25)}
+.round svg{width:22px;height:22px;fill:none;stroke:var(--cream);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.round[aria-pressed="false"] .on,.round[aria-pressed="true"] .off{display:none}
+.stats{flex:1;min-width:0;display:flex;justify-content:center;gap:10px}
+.stat{display:flex;flex-direction:column;align-items:center;line-height:1;padding:5px 14px;border-radius:14px;background:rgba(0,0,0,.14)}
+.lbl{font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.75}
+.val{font-family:var(--display);font-weight:800;font-size:22px;font-variant-numeric:tabular-nums;margin-top:3px}
+.pl{display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:rgba(0,0,0,.14);
+  transition:transform .2s,background .2s,box-shadow .2s}
+.pl .dot{width:14px;height:14px;border-radius:50%;background:var(--c)}
+.pl .val{margin:0;font-size:22px}
+.pl .nm{font-weight:800;font-size:13px;white-space:nowrap}
+@media (max-width:520px){.pl .nm{display:none}.pl{padding:6px 14px}}
+.pl.active{background:var(--c);transform:scale(1.08);box-shadow:0 3px 0 rgba(0,0,0,.25)}
+.pl.active .dot{background:var(--cream)}
+.title{font-family:var(--display);font-weight:800;font-size:24px;letter-spacing:.01em}
+
+/* ---------- Bordet ---------- */
+#stage{flex:1;min-height:0;display:grid;place-items:center;position:relative}
+#board{display:grid;grid-template-columns:repeat(var(--n),var(--cell));gap:var(--gap);padding:var(--gap);border-radius:calc(var(--cell)*.22);
+  background:rgba(0,0,0,.12);box-shadow:inset 0 0 0 3px transparent;transition:box-shadow .25s}
+#board.two{box-shadow:inset 0 0 0 4px var(--turn)}
+.card{position:relative;width:var(--cell);height:var(--cell);padding:0;border:0;background:none;perspective:700px}
+.inner{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .34s cubic-bezier(.3,.7,.35,1.15)}
+.card.open .inner{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;border-radius:calc(var(--cell)*.17);backface-visibility:hidden;-webkit-backface-visibility:hidden;display:grid;place-items:center}
+.back{background:
+    radial-gradient(circle at 50% 50%,var(--tomato) 0 7%,var(--cream) 7.5% 17%,transparent 17.5%),
+    radial-gradient(rgba(255,248,236,.3) 22%,transparent 24%) 0 0/calc(var(--cell)*.19) calc(var(--cell)*.19),
+    var(--tomato);
+  box-shadow:inset 0 0 0 calc(var(--cell)*.045) var(--cream),0 calc(var(--cell)*.05) 0 var(--tomato-dk),0 6px 12px rgba(0,0,0,.22)}
+.card:not(.open):active .inner{transform:scale(.94)}
+.front{transform:rotateY(180deg);background:var(--cream);
+  box-shadow:0 calc(var(--cell)*.05) 0 var(--cream-dk),0 6px 12px rgba(0,0,0,.2)}
+.front span{font-family:var(--emoji);font-size:calc(var(--cell)*.6);line-height:1;transform:translateY(2%)}
+.card.done .front{box-shadow:inset 0 0 0 calc(var(--cell)*.06) var(--sun),0 calc(var(--cell)*.05) 0 var(--cream-dk)}
+.card.done.p1 .front{box-shadow:inset 0 0 0 calc(var(--cell)*.06) var(--p1),0 calc(var(--cell)*.05) 0 var(--cream-dk)}
+.card.done.p2 .front{box-shadow:inset 0 0 0 calc(var(--cell)*.06) var(--p2),0 calc(var(--cell)*.05) 0 var(--cream-dk)}
+.card.done{animation:pop .5s .2s both}
+.card.miss{animation:wobble .45s .25s both}
+.card.deal{animation:deal .38s var(--d,0s) both}
+.card.joker{cursor:default}
+.card.joker .front{background:var(--sun);box-shadow:0 calc(var(--cell)*.05) 0 var(--sun-dk)}
+.star{width:58%;height:58%;background:var(--cream);clip-path:polygon(50% 3%,62% 36%,97% 37%,69% 58%,79% 93%,50% 72%,21% 93%,31% 58%,3% 37%,38% 36%)}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.14)}100%{transform:scale(1)}}
+@keyframes wobble{0%,100%{transform:rotate(0)}25%{transform:rotate(-6deg)}50%{transform:rotate(5deg)}75%{transform:rotate(-3deg)}}
+@keyframes deal{from{transform:translateY(18px) scale(.6);opacity:0}to{transform:none;opacity:1}}
+#toast{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.8);padding:12px 24px;border-radius:999px;
+  background:var(--c,var(--p1));color:var(--cream);font-family:var(--display);font-weight:800;font-size:26px;
+  box-shadow:0 5px 0 rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;white-space:nowrap}
+#toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+
+/* ---------- Menuer ---------- */
+#overlay{position:fixed;inset:0;display:grid;place-items:center;z-index:20;box-sizing:border-box;
+  padding:max(12px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(12px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
+  background:rgba(18,74,68,.55);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.panel{width:100%;max-width:420px;max-height:100%;overflow:auto;box-sizing:border-box;touch-action:pan-y;
+  background:var(--cream);color:var(--ink);border-radius:24px;padding:18px;display:flex;flex-direction:column;gap:14px;
+  box-shadow:0 8px 0 var(--cream-dk),0 18px 40px rgba(0,0,0,.3);text-align:center}
+.logo{font-family:var(--display);font-weight:800;font-size:clamp(40px,12vw,54px);line-height:.9;margin:4px 0 0;color:var(--tomato);
+  text-wrap:balance;text-shadow:0 3px 0 var(--cream-dk)}
+.ver{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft)}
+.sec{display:flex;flex-direction:column;gap:8px}
+.sec h3{margin:0;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+.cats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.opt{border:0;background:#fff;border-radius:16px;padding:8px 4px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;
+  box-shadow:inset 0 0 0 2px var(--cream-dk),0 3px 0 var(--cream-dk);color:var(--ink);transition:transform .12s,box-shadow .12s}
+.opt .em{font-family:var(--emoji);font-size:30px;line-height:1.1}
+.opt .mini4{display:grid;grid-template-columns:1fr 1fr;font-family:var(--emoji);font-size:14px;line-height:1.05;height:33px;align-content:center}
+.opt .t{font-weight:800;font-size:12px;line-height:1.1}
+.opt[aria-pressed="true"]{box-shadow:inset 0 0 0 3px var(--tomato),0 3px 0 var(--tomato-dk);background:#fff3ee;transform:translateY(-2px)}
+.row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.row.two{grid-template-columns:repeat(2,1fr)}
+.dots{display:grid;grid-template-columns:repeat(var(--n),1fr);gap:2px;width:34px;height:34px}
+.dots i{border-radius:2px;background:var(--tomato)}
+.opt .big{font-family:var(--display);font-weight:800;font-size:18px;line-height:1}
+.ppl{display:flex;gap:4px;height:34px;align-items:center}
+.ppl i{width:16px;height:26px;border-radius:8px 8px 4px 4px;background:var(--p1);position:relative}
+.ppl i::before{content:"";position:absolute;left:2px;top:-12px;width:12px;height:12px;border-radius:50%;background:inherit}
+.ppl i+i{background:var(--p2)}
+.btn{border:0;border-radius:18px;padding:13px 18px;font-family:var(--display);font-weight:800;font-size:22px;line-height:1;
+  background:#fff;color:var(--ink);box-shadow:inset 0 0 0 2px var(--cream-dk),0 4px 0 var(--cream-dk)}
+.btn.primary{background:var(--sun);box-shadow:0 5px 0 var(--sun-dk);font-size:28px;padding:15px 18px}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--cream-dk)}
+.btn.primary:active{box-shadow:0 2px 0 var(--sun-dk)}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hint{font-size:12px;color:var(--ink-soft);margin:0}
+.stars{display:flex;justify-content:center;gap:6px}
+.stars svg{width:56px;height:56px}
+.stars path{fill:var(--cream-dk)}
+.stars .on path{fill:var(--sun);stroke:var(--sun-dk);stroke-width:1.2}
+.stars .on{animation:pop .5s both}
+.stars .on:nth-child(2){animation-delay:.15s}.stars .on:nth-child(3){animation-delay:.3s}
+.big-msg{font-family:var(--display);font-weight:800;font-size:34px;line-height:1;margin:0;color:var(--ink);text-wrap:balance}
+.res{font-size:16px;font-weight:800;margin:0;font-variant-numeric:tabular-nums}
+.res em{font-style:normal;color:var(--tomato)}
+.qicon{font-family:var(--emoji);font-size:48px;line-height:1}
+#fx{position:fixed;inset:0;pointer-events:none;z-index:30}
+@media (max-height:640px){.opt .em{font-size:24px}.cats{gap:6px}.panel{gap:10px;padding:14px}.logo{font-size:38px}}
+@media (prefers-reduced-motion:reduce){.inner{transition-duration:.01s}.card.done,.card.miss,.card.deal,.stars .on{animation:none}}
+</style>
+
+<div id="app">
+  <div class="hud">
+    <button class="round" id="btnHome" aria-label="Til menuen" hidden>
+      <svg viewBox="0 0 24 24"><path d="M4 11 12 4l8 7"/><path d="M6.5 9.5V20h11V9.5"/></svg>
+    </button>
+    <div class="stats">
+      <div class="title" id="hudTitle">Vendespil</div>
+      <div class="stat" id="sPairs" hidden><span class="lbl">Par</span><span class="val" id="vPairs">0/8</span></div>
+      <div class="stat" id="sMoves" hidden><span class="lbl">Træk</span><span class="val" id="vMoves">0</span></div>
+      <div class="pl" id="pl1" style="--c:var(--p1)" hidden><span class="dot"></span><span class="nm">Spiller 1</span><span class="val" id="vP1">0</span></div>
+      <div class="pl" id="pl2" style="--c:var(--p2)" hidden><span class="dot"></span><span class="nm">Spiller 2</span><span class="val" id="vP2">0</span></div>
+    </div>
+    <button class="round" id="btnSound" aria-label="Lyd" aria-pressed="true">
+      <svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="on" d="M15.5 9a4.5 4.5 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/><path class="off" d="m16 9.5 5 5m0-5-5 5"/></svg>
+    </button>
+    <button class="round" id="btnFS" aria-label="Fuld skærm">
+      <svg viewBox="0 0 24 24"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg>
+    </button>
+  </div>
+  <div id="stage">
+    <div id="board" role="grid" aria-label="Spillebræt"></div>
+    <div id="toast" aria-live="polite"></div>
+  </div>
+</div>
+
+<div id="overlay">
+  <div class="panel" id="pMenu">
+    <div>
+      <h1 class="logo">Vendespil</h1>
+      <div class="ver" id="verTag"></div>
+    </div>
+    <div class="sec">
+      <h3>Billeder</h3>
+      <div class="cats" id="cats"></div>
+    </div>
+    <div class="sec">
+      <h3>Størrelse</h3>
+      <div class="row" id="sizes"></div>
+    </div>
+    <div class="sec">
+      <h3>Spillere</h3>
+      <div class="row two" id="players"></div>
+    </div>
+    <button class="btn primary" id="btnStart">Spil</button>
+    <p class="hint" id="installHint" hidden>Føj spillet til hjemmeskærmen, så åbner det i fuld skærm som en app.</p>
+  </div>
+
+  <div class="panel" id="pWin" hidden>
+    <div class="stars" id="stars"></div>
+    <p class="big-msg" id="winMsg">Godt klaret!</p>
+    <p class="res" id="winRes"></p>
+    <div class="btns">
+      <button class="btn" id="btnMenu">Menu</button>
+      <button class="btn primary" id="btnAgain">Igen</button>
+    </div>
+  </div>
+
+  <div class="panel" id="pQuit" hidden>
+    <div class="qicon">🏠</div>
+    <p class="big-msg">Stop spillet?</p>
+    <div class="btns">
+      <button class="btn" id="btnQuitNo">Nej</button>
+      <button class="btn primary" id="btnQuitYes">Ja</button>
+    </div>
+  </div>
+</div>
+<canvas id="fx"></canvas>
+
+<script>
+(()=>{
+const VERSION = 'Vendespil 0.1.0';
+
+/* ---------- Motiver: 10 kategorier à 18 billeder (nok til 6x6) ---------- */
+const CATS = [
+  {id:'dyr', name:'Dyr', icon:'🐶', list:['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐴','🐘','🦒']},
+  {id:'frugt', name:'Frugt', icon:'🍓', list:['🍎','🍐','🍊','🍋','🍌','🍉','🍇','🍓','🍒','🍑','🥭','🍍','🥥','🥝','🍅','🥕','🌽','🥦']},
+  {id:'trafik', name:'Trafik', icon:'🚒', list:['🚗','🚕','🚌','🚑','🚒','🚓','🚜','🏎️','🚲','🛵','🚂','✈️','🚁','🚀','⛵','🚤','🚚','🛴']},
+  {id:'hav', name:'Havet', icon:'🐙', list:['🐟','🐠','🐡','🦈','🐙','🦑','🦀','🦞','🐳','🐬','🦭','🐢','🐚','🦐','🐋','🌊','⚓','🏝️']},
+  {id:'natur', name:'Natur', icon:'🌻', list:['🌻','🌷','🌹','🌼','🌵','🌲','🌴','🍄','🍁','🍀','🌈','☀️','🌙','🌍','❄️','☁️','⚡','🔥']},
+  {id:'mad', name:'Mad', icon:'🍕', list:['🍕','🍔','🌭','🍟','🍦','🍩','🍪','🎂','🧁','🍭','🍫','🥞','🧇','🍿','🥨','🧀','🥚','🍞']},
+  {id:'sport', name:'Sport', icon:'⚽', list:['⚽','🏀','🏈','⚾','🎾','🏐','🏓','🎳','🪁','🛹','⛸️','🥊','🏆','🎯','🛷','⛳','🏸','🏒']},
+  {id:'eventyr', name:'Eventyr', icon:'🦄', list:['🦄','🐉','🧚','🧜','🧙','👑','🏰','🧞','👻','🤖','👽','🦖','🦕','🪄','💎','🔮','🎃','🦸']},
+  {id:'kryb', name:'Kryb', icon:'🦋', list:['🐝','🐞','🦋','🐛','🐜','🐌','🕷️','🦗','🐦','🦉','🦆','🦅','🦜','🦩','🐓','🦚','🦢','🐤']},
+  {id:'hjemme', name:'Hjemme', icon:'🧸', list:['🏠','🛏️','🛁','🧸','🪑','🚪','🕯️','⏰','📚','✏️','🖍️','✂️','🎈','🎁','🧩','🎲','🔑','☂️']},
+];
+const MIX = {id:'blandet', name:'Blandet', icon:null, list:[...new Set(CATS.flatMap(c=>c.list))]};
+const ALL = [...CATS, MIX];
+const SIZES = [{n:4,t:'Let'},{n:5,t:'Mellem'},{n:6,t:'Svær'}];
+
+const $ = id => document.getElementById(id);
+const store = {
+  get(k,d){ try{ const v=localStorage.getItem(k); return v===null?d:v; }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+};
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+let cfg = {
+  cat: store.get('vendespil.cat','dyr'),
+  n: +store.get('vendespil.n','4'),
+  players: +store.get('vendespil.players','1'),
+};
+if(!ALL.some(c=>c.id===cfg.cat)) cfg.cat='dyr';
+if(![4,5,6].includes(cfg.n)) cfg.n=4;
+if(![1,2].includes(cfg.players)) cfg.players=1;
+
+let st = {mode:'menu'};
+let soundOn = store.get('vendespil.sound','1')==='1';
+
+/* ---------- Lyd ---------- */
+let ac=null;
+function ensureAudio(){
+  if(!soundOn) return;
+  try{ if(!ac) ac=new (window.AudioContext||window.webkitAudioContext)(); if(ac.state==='suspended') ac.resume(); }catch(e){}
+}
+function tone(f,t0,d,type,vol){
+  if(!soundOn||!ac) return;
+  try{
+    const t=ac.currentTime+t0, o=ac.createOscillator(), g=ac.createGain();
+    o.type=type||'sine'; o.frequency.setValueAtTime(f,t);
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol||.12,t+.012); g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+    o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t+d+.03);
+  }catch(e){}
+}
+const sfx = {
+  flip(){ tone(700,0,.06,'triangle',.07); },
+  match(){ tone(523,0,.14,'sine',.14); tone(659,.09,.14,'sine',.14); tone(784,.18,.24,'sine',.14); },
+  miss(){ tone(330,0,.14,'sine',.07); tone(262,.11,.2,'sine',.07); },
+  win(){ [523,659,784,1047,784,1047].forEach((f,i)=>tone(f,i*.11,.22,'triangle',.12)); },
+};
+
+/* ---------- Menu ---------- */
+function buildMenu(){
+  $('cats').innerHTML = ALL.map(c=>`<button class="opt" data-cat="${c.id}" aria-pressed="false">${
+    c.icon ? `<span class="em">${c.icon}</span>` : `<span class="mini4"><span>🐶</span><span>🍓</span><span>🚒</span><span>🦄</span></span>`
+  }<span class="t">${c.name}</span></button>`).join('');
+  $('sizes').innerHTML = SIZES.map(s=>`<button class="opt" data-n="${s.n}" aria-pressed="false" aria-label="${s.n} gange ${s.n}, ${s.t}">
+    <span class="dots" style="--n:${s.n}">${'<i></i>'.repeat(s.n*s.n)}</span><span class="big">${s.n}×${s.n}</span><span class="t">${s.t}</span></button>`).join('');
+  $('players').innerHTML = [1,2].map(p=>`<button class="opt" data-p="${p}" aria-pressed="false">
+    <span class="ppl">${'<i></i>'.repeat(p)}</span><span class="t">${p===1?'1 spiller':'2 spillere'}</span></button>`).join('');
+  $('cats').addEventListener('click',e=>{ const b=e.target.closest('[data-cat]'); if(!b) return; cfg.cat=b.dataset.cat; store.set('vendespil.cat',cfg.cat); sfx.flip(); syncMenu(); });
+  $('sizes').addEventListener('click',e=>{ const b=e.target.closest('[data-n]'); if(!b) return; cfg.n=+b.dataset.n; store.set('vendespil.n',cfg.n); sfx.flip(); syncMenu(); });
+  $('players').addEventListener('click',e=>{ const b=e.target.closest('[data-p]'); if(!b) return; cfg.players=+b.dataset.p; store.set('vendespil.players',cfg.players); sfx.flip(); syncMenu(); });
+}
+function syncMenu(){
+  document.querySelectorAll('[data-cat]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.cat===cfg.cat)));
+  document.querySelectorAll('[data-n]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.n===cfg.n)));
+  document.querySelectorAll('[data-p]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.p===cfg.players)));
+}
+function show(id){
+  ['pMenu','pWin','pQuit'].forEach(p=>$(p).hidden = p!==id);
+  $('overlay').hidden = !id;
+}
+
+/* ---------- Spillet ---------- */
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+function startGame(){
+  ensureAudio(); enterFS(); stopConfetti();
+  clearTimeout(st.pending);
+  const n=cfg.n, total=Math.floor(n*n/2);
+  const cat=ALL.find(c=>c.id===cfg.cat)||CATS[0];
+  const pics=shuffle(cat.list.slice()).slice(0,total);
+  const deck=shuffle(pics.concat(pics)).map(e=>({e}));
+  if(n%2===1) deck.splice(Math.floor(n*n/2),0,{joker:true});
+  st = {mode:'play', n, total, cards:deck, first:null, second:null, pending:null, moves:0, pairs:0,
+        players:cfg.players, turn:0, scores:[0,0]};
+  renderBoard(); updateHud(); show(null); resize();
+  $('btnHome').hidden=false; $('hudTitle').hidden=true;
+}
+
+function renderBoard(){
+  const b=$('board'); b.innerHTML=''; b.style.setProperty('--n',st.n);
+  b.classList.toggle('two',st.players===2);
+  st.cards.forEach((c,i)=>{
+    const el=document.createElement('button');
+    el.className='card deal'+(c.joker?' joker open':'');
+    el.style.setProperty('--d',(i*22)+'ms');
+    el.setAttribute('aria-label',c.joker?'Stjerne':'Skjult kort');
+    el.innerHTML=`<span class="inner"><span class="face back"></span><span class="face front">${c.joker?'<span class="star"></span>':`<span>${c.e}</span>`}</span></span>`;
+    if(c.joker){ el.tabIndex=-1; el.disabled=true; }
+    el.addEventListener('click',()=>tap(i));
+    el.addEventListener('animationend',ev=>{ if(ev.animationName==='deal') el.classList.remove('deal'); if(ev.animationName==='wobble') el.classList.remove('miss'); });
+    c.el=el; b.appendChild(el);
+  });
+}
+
+function setOpen(c,open){
+  c.open=open; c.el.classList.toggle('open',open);
+  c.el.setAttribute('aria-label',open?c.e:'Skjult kort');
+}
+
+function tap(i){
+  if(st.mode!=='play') return;
+  const c=st.cards[i]; if(!c||c.joker) return;
+  ensureAudio();
+  if(st.pending) closeMiss();          // tryk under ventetiden vender kortene med det samme
+  if(c.open||c.done) return;
+  setOpen(c,true);
+  if(!st.first){ st.first=c; sfx.flip(); return; }
+  st.second=c; st.moves++;
+  if(st.first.e===c.e){
+    [st.first,c].forEach(k=>{ k.done=true; k.el.classList.add('done'); if(st.players===2) k.el.classList.add('p'+(st.turn+1)); k.el.disabled=true; });
+    st.pairs++; st.scores[st.turn]++;
+    st.first=st.second=null;
+    setTimeout(sfx.match,120);
+    updateHud();
+    if(st.pairs===st.total){ st.mode='won'; setTimeout(win,900); }
+  } else {
+    sfx.flip();
+    st.first.el.classList.add('miss'); c.el.classList.add('miss');
+    setTimeout(()=>{ if(st.second===c) sfx.miss(); },300);
+    st.pending=setTimeout(closeMiss,1400);
+    updateHud();
+  }
+}
+
+function closeMiss(){
+  clearTimeout(st.pending); st.pending=null;
+  if(st.first) setOpen(st.first,false);
+  if(st.second) setOpen(st.second,false);
+  st.first=st.second=null;
+  if(st.players===2){ st.turn=1-st.turn; updateHud(); toast(); }
+}
+
+function updateHud(){
+  const two=st.players===2, playing=st.mode!=='menu';
+  $('sPairs').hidden=$('sMoves').hidden=!playing||two;
+  $('pl1').hidden=$('pl2').hidden=!playing||!two;
+  if(!playing) return;
+  $('vPairs').textContent=st.pairs+'/'+st.total;
+  $('vMoves').textContent=st.moves;
+  $('vP1').textContent=st.scores[0]; $('vP2').textContent=st.scores[1];
+  $('pl1').classList.toggle('active',two&&st.turn===0);
+  $('pl2').classList.toggle('active',two&&st.turn===1);
+  $('board').style.setProperty('--turn',st.turn===0?'var(--p1)':'var(--p2)');
+}
+
+let toastT=null;
+function toast(){
+  const t=$('toast');
+  t.textContent='Spiller '+(st.turn+1);
+  t.style.setProperty('--c',st.turn===0?'var(--p1)':'var(--p2)');
+  t.classList.add('show'); clearTimeout(toastT);
+  toastT=setTimeout(()=>t.classList.remove('show'),900);
+}
+
+const STAR='<svg viewBox="0 0 24 24"><path d="M12 2.5l2.9 6.2 6.7.8-5 4.6 1.4 6.7L12 17.4l-6 3.4 1.4-6.7-5-4.6 6.7-.8z"/></svg>';
+function win(){
+  sfx.win(); confetti();
+  let msg, res, stars;
+  if(st.players===2){
+    const [a,b]=st.scores;
+    msg = a===b ? 'Uafgjort!' : `Spiller ${a>b?1:2} vinder!`;
+    res = `Spiller 1: <em>${a}</em> par · Spiller 2: <em>${b}</em> par`;
+    stars = 3;
+  } else {
+    const ratio=st.moves/st.total;
+    stars = ratio<=1.6?3:ratio<=2.3?2:1;
+    const key='vendespil.best.'+st.n, best=+store.get(key,'0');
+    const isNew = !best || st.moves<best;
+    if(isNew) store.set(key,st.moves);
+    msg = stars===3?'Super godt!':stars===2?'Godt klaret!':'Du klarede det!';
+    res = `<em>${st.moves}</em> træk · ${isNew?'ny rekord!':'rekord '+best+' træk'}`;
+  }
+  $('stars').innerHTML=[0,1,2].map(i=>`<span class="${i<stars?'on':''}">${STAR}</span>`).join('');
+  $('winMsg').textContent=msg; $('winRes').innerHTML=res;
+  show('pWin');
+}
+
+function toMenu(){
+  clearTimeout(st.pending); stopConfetti();
+  st={mode:'menu'}; $('board').innerHTML='';
+  $('btnHome').hidden=true; $('hudTitle').hidden=false;
+  updateHud(); syncMenu(); show('pMenu');
+}
+function askQuit(){ if(st.mode==='play') show('pQuit'); else toMenu(); }
+
+/* ---------- Størrelse: kortene fylder skærmen ---------- */
+function resize(){
+  if(!st.n) return;
+  const s=$('stage'), n=st.n, w=s.clientWidth, h=s.clientHeight;
+  const unit=Math.min(w,h)/n;
+  const gap=Math.max(5,Math.min(12,Math.round(unit*.08)));
+  const cell=Math.max(30,Math.floor(Math.min((w-gap*(n+1))/n,(h-gap*(n+1))/n)));
+  const b=$('board'); b.style.setProperty('--cell',cell+'px'); b.style.setProperty('--gap',gap+'px');
+}
+
+/* ---------- Konfetti ---------- */
+let fxRun=0;
+function stopConfetti(){ fxRun++; const cv=$('fx'); cv.getContext('2d').clearRect(0,0,cv.width,cv.height); }
+function confetti(){
+  if(reduceMotion) return;
+  const run=++fxRun;
+  const cv=$('fx'), x=cv.getContext('2d'), dpr=Math.min(2,devicePixelRatio||1);
+  const W=innerWidth, H=innerHeight; cv.width=W*dpr; cv.height=H*dpr; cv.style.width=W+'px'; cv.style.height=H+'px';
+  x.setTransform(dpr,0,0,dpr,0,0);
+  const cols=['#ee5a3c','#ffc53d','#2f86d9','#9a57df','#fff8ec','#3fbf8f'];
+  const ps=Array.from({length:140},()=>({x:Math.random()*W,y:-20-Math.random()*H*.5,vx:(Math.random()-.5)*2.4,vy:2+Math.random()*3,
+    r:Math.random()*6.3,vr:(Math.random()-.5)*.3,w:6+Math.random()*6,h:4+Math.random()*4,c:cols[Math.floor(Math.random()*cols.length)]}));
+  const t0=performance.now();
+  (function f(t){
+    x.clearRect(0,0,W,H);
+    let alive=false;
+    ps.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.vy+=.03; p.r+=p.vr; if(p.y<H+20) alive=true;
+      x.save(); x.translate(p.x,p.y); x.rotate(p.r); x.fillStyle=p.c; x.fillRect(-p.w/2,-p.h/2,p.w,p.h); x.restore(); });
+    if(run!==fxRun) return;
+    if(alive && t-t0<4500) requestAnimationFrame(f); else x.clearRect(0,0,W,H);
+  })(t0);
+}
+
+/* ---------- Knapper ---------- */
+$('btnStart').addEventListener('click',startGame);
+$('btnAgain').addEventListener('click',startGame);
+$('btnMenu').addEventListener('click',toMenu);
+$('btnHome').addEventListener('click',askQuit);
+$('btnQuitYes').addEventListener('click',toMenu);
+$('btnQuitNo').addEventListener('click',()=>show(null));
+$('btnSound').addEventListener('click',()=>{ soundOn=!soundOn; store.set('vendespil.sound',soundOn?'1':'0'); syncSound(); ensureAudio(); });
+function syncSound(){ $('btnSound').setAttribute('aria-pressed',String(soundOn)); }
+
+/* ---------- Fuld skærm / app ---------- */
+const standalone = (window.matchMedia && matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches) || navigator.standalone===true;
+const fsSupported = !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+const touchDevice = matchMedia('(pointer: coarse)').matches;
+const isFS = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+function enterFS(){
+  if(standalone || !fsSupported || !touchDevice || isFS()) return;
+  const el=document.documentElement, req=el.requestFullscreen||el.webkitRequestFullscreen;
+  try{ const p=req.call(el,{navigationUI:'hide'}); if(p && p.catch) p.catch(()=>{}); }catch(e){}
+}
+function toggleFS(){
+  if(isFS()){ try{ (document.exitFullscreen||document.webkitExitFullscreen).call(document); }catch(e){} }
+  else { const el=document.documentElement, req=el.requestFullscreen||el.webkitRequestFullscreen;
+    try{ const p=req.call(el,{navigationUI:'hide'}); if(p && p.catch) p.catch(()=>{}); }catch(e){} }
+}
+$('btnFS').addEventListener('click',toggleFS);
+$('btnFS').hidden = standalone || !fsSupported;
+$('installHint').hidden = standalone || fsSupported || !touchDevice;
+['fullscreenchange','webkitfullscreenchange'].forEach(ev=>document.addEventListener(ev,()=>setTimeout(resize,60)));
+if('serviceWorker' in navigator && location.protocol==='https:' && document.querySelector('link[rel="manifest"]')){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+
+/* ---------- Start ---------- */
+$('verTag').textContent=VERSION;
+syncSound(); buildMenu(); syncMenu(); updateHud(); show('pMenu');
+window.addEventListener('resize',resize);
+if(window.ResizeObserver) new ResizeObserver(resize).observe($('stage'));
+})();
+</script>
+
+</html>
