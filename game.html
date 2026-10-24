@@ -126,7 +126,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:3px}
 .res em{font-style:normal;color:var(--tomato)}
 .qicon{font-family:var(--emoji);font-size:48px;line-height:1}
 #fx{position:fixed;inset:0;pointer-events:none;z-index:30}
-@media (max-height:640px){.opt .em{font-size:24px}.cats{gap:6px}.panel{gap:10px;padding:14px}.logo{font-size:38px}}
+@media (max-height:760px){.opt .em{font-size:24px}.opt .mini4{font-size:12px;height:27px}.opt{padding:6px 4px 5px}.cats{gap:6px}.panel{gap:10px;padding:14px}.logo{font-size:38px}.dots{width:28px;height:28px}.ppl{height:30px}.btn.primary{padding:12px 18px}}
 @media (prefers-reduced-motion:reduce){.inner{transition-duration:.01s}.card.done,.card.miss,.card.deal,.stars .on{animation:none}}
 </style>
 
@@ -200,9 +200,9 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:3px}
 
 <script>
 (()=>{
-const VERSION = 'Vendespil 0.1.0';
+const VERSION = 'Vendespil 0.2.0';
 
-/* ---------- Motiver: 10 kategorier à 18 billeder (nok til 6x6) ---------- */
+/* ---------- Motiver: 15 kategorier à 18 billeder (nok til 6x6) ---------- */
 const CATS = [
   {id:'dyr', name:'Dyr', icon:'🐶', list:['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐴','🐘','🦒']},
   {id:'frugt', name:'Frugt', icon:'🍓', list:['🍎','🍐','🍊','🍋','🍌','🍉','🍇','🍓','🍒','🍑','🥭','🍍','🥥','🥝','🍅','🥕','🌽','🥦']},
@@ -214,6 +214,11 @@ const CATS = [
   {id:'eventyr', name:'Eventyr', icon:'🦄', list:['🦄','🐉','🧚','🧜','🧙','👑','🏰','🧞','👻','🤖','👽','🦖','🦕','🪄','💎','🔮','🎃','🦸']},
   {id:'kryb', name:'Kryb', icon:'🦋', list:['🐝','🐞','🦋','🐛','🐜','🐌','🕷️','🦗','🐦','🦉','🦆','🦅','🦜','🦩','🐓','🦚','🦢','🐤']},
   {id:'hjemme', name:'Hjemme', icon:'🧸', list:['🏠','🛏️','🛁','🧸','🪑','🚪','🕯️','⏰','📚','✏️','🖍️','✂️','🎈','🎁','🧩','🎲','🔑','☂️']},
+  {id:'farver', name:'Farver', icon:'🟡', list:['🔴','🟠','🟡','🟢','🔵','🟣','🟤','⚫','⚪','🟥','🟧','🟨','🟩','🟦','🟪','🟫','⬛','⬜']},
+  {id:'ansigter', name:'Ansigter', icon:'😀', list:['😀','😂','😍','😎','😴','🤔','😮','😢','😡','🥳','😜','🤩','😇','🥶','🤠','🤡','😱','🤗']},
+  {id:'toej', name:'Tøj', icon:'👕', list:['👕','👖','👗','👟','👒','🧢','🧤','🧣','🧦','👓','🎒','🕶️','👠','👢','🥾','🩳','👘','👜']},
+  {id:'musik', name:'Musik', icon:'🎸', list:['🎸','🎹','🥁','🎺','🎷','🎻','🪕','🎤','🎧','🔔','📯','🪗','🪘','📻','🎵','🎼','💿','📢']},
+  {id:'vaerktoej', name:'Værktøj', icon:'🔨', list:['🔨','🪛','🔧','🪚','⛏️','🪓','🧰','🪜','🧲','🔩','🏗️','🚧','🧱','🪣','🧹','⚙️','🔦','📏']},
 ];
 const MIX = {id:'blandet', name:'Blandet', icon:null, list:[...new Set(CATS.flatMap(c=>c.list))]};
 const ALL = [...CATS, MIX];

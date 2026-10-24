@@ -1,7 +1,7 @@
 {
   "name": "Vendespil",
   "short_name": "Vendespil",
-  "description": "Vendespil for børn med 10 slags billeder og tre størrelser.",
+  "description": "Vendespil for børn med 15 slags billeder og tre størrelser.",
   "lang": "da",
   "start_url": "./",
   "scope": "./",
