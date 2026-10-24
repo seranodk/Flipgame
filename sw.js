@@ -1,5 +1,5 @@
-// Vendespil 0.2.0 – gør spillet spilbart offline efter første besøg
-const CACHE = 'vendespil-0.2.0';
+// Vendespil 0.3.0 – gør spillet spilbart offline efter første besøg
+const CACHE = 'vendespil-0.3.0';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES))); self.skipWaiting(); });
 self.addEventListener('activate', e => {

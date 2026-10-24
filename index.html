@@ -44,7 +44,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:3px}
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px}
 
 /* ---------- Topbar ---------- */
-.hud{display:flex;align-items:center;gap:10px;width:100%;max-width:620px;margin:0 auto}
+.hud{display:flex;align-items:center;gap:10px;width:100%;max-width:620px;margin:0 auto;flex:none}
 .round{flex:none;width:44px;height:44px;border-radius:50%;border:0;display:grid;place-items:center;
   background:rgba(255,248,236,.14);box-shadow:inset 0 0 0 2px rgba(255,248,236,.25)}
 .round svg{width:22px;height:22px;fill:none;stroke:var(--cream);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
@@ -218,7 +218,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:3px}
 
 <script>
 (()=>{
-const VERSION = 'Vendespil 0.2.0';
+const VERSION = 'Vendespil 0.3.0';
 
 /* ---------- Motiver: 15 kategorier à 18 billeder (nok til 6x6) ---------- */
 const CATS = [
@@ -304,6 +304,7 @@ function syncMenu(){
 function show(id){
   ['pMenu','pWin','pQuit'].forEach(p=>$(p).hidden = p!==id);
   $('overlay').hidden = !id;
+  if(id) scaleUI();
 }
 
 /* ---------- Spillet ---------- */
@@ -431,11 +432,26 @@ function toMenu(){
 function askQuit(){ if(st.mode==='play') show('pQuit'); else toMenu(); }
 
 /* ---------- Størrelse: kortene fylder skærmen ---------- */
+/* Menuer og topbar skaleres op på store skærme (tablet, computer, tv) */
+function scaleUI(){
+  const W=innerWidth, H=innerHeight;
+  const hud=document.querySelector('.hud');
+  const kh=Math.max(1,Math.min(2,W/560,H/760));
+  hud.style.zoom=kh;
+  document.querySelectorAll('.panel').forEach(pn=>{
+    if(pn.hidden) return;
+    pn.style.zoom=1;
+    const need=pn.scrollHeight+40;
+    const k=Math.max(1,Math.min(2.4,(W-32)/460,H/need));
+    pn.style.zoom=k;
+  });
+}
 function resize(){
+  scaleUI();
   if(!st.n) return;
   const s=$('stage'), n=st.n, w=s.clientWidth, h=s.clientHeight;
   const unit=Math.min(w,h)/n;
-  const gap=Math.max(5,Math.min(12,Math.round(unit*.08)));
+  const gap=Math.max(5,Math.min(22,Math.round(unit*.08)));
   const cell=Math.max(30,Math.floor(Math.min((w-gap*(n+1))/n,(h-gap*(n+1))/n)));
   const b=$('board'); b.style.setProperty('--cell',cell+'px'); b.style.setProperty('--gap',gap+'px');
 }
@@ -499,6 +515,7 @@ if('serviceWorker' in navigator && location.protocol==='https:' && document.quer
 /* ---------- Start ---------- */
 $('verTag').textContent=VERSION;
 syncSound(); buildMenu(); syncMenu(); updateHud(); show('pMenu');
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(scaleUI);
 window.addEventListener('resize',resize);
 if(window.ResizeObserver) new ResizeObserver(resize).observe($('stage'));
 })();

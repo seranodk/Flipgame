@@ -2,7 +2,7 @@
 
 Vendespil (memory) for børn fra 4 til 8 år. Vend to kort ad gangen og find parrene. Kører i browseren på både mobil og computer — ét `index.html`, ingen afhængigheder.
 
-**Aktuel version: Vendespil 0.2.0**
+**Aktuel version: Vendespil 0.3.0**
 
 ## Spil som app (fuld skærm)
 Åbn spillet på GitHub Pages på mobilen og vælg **Føj til hjemmeskærm** (Safari: Del-knappen, Chrome: menuen ⋮). Så starter det i fuld skærm uden browserlinje og kan spilles offline. På Android kan du også trykke på fuldskærmsknappen øverst.
@@ -20,6 +20,9 @@ Vendespil (memory) for børn fra 4 til 8 år. Vend to kort ad gangen og find par
 
 ## Versioner
 Navngivning: **Vendespil 0.x.x** — større ændring hæver første x, mindre ændring hæver andet x.
+
+### Vendespil 0.3.0
+- Menuer, topbar og kort vokser med skærmen, så alt er stort og let at se på tablet, computer og tv.
 
 ### Vendespil 0.2.0
 - 15 kategorier: nye er Farver, Ansigter, Tøj, Musik og Værktøj.
